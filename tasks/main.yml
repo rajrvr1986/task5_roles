@@ -1,0 +1,69 @@
+---
+# tasks file for roles
+   - name: Apache/Mysql/PHP installation
+     apt: name={{ item }} state=present
+     with_items:
+      - apache2
+      - mysql-server
+      - php8.1-mysql
+      - php8.1
+      - libapache2-mod-php8.1
+      - python3-mysqldb
+
+   - name: Install php extensions
+     apt: name={{ item }} state=present
+     with_items:
+      - php8.1-gd
+      - php8.1-mbstring
+      - php8.1-mysqlnd
+
+   - name: Database creation
+     mysql_db:
+      login_user: root
+      login_password: "@rmia247"
+      name: wpraj
+      state: present
+
+   - name: Create database user with password and all database privileges and 'WITH GRANT OPTION'
+     community.mysql.mysql_user:
+      name: wpraj
+      password: raj@12345
+      priv: '*.*:ALL,GRANT'
+      state: present
+
+   - name: Download and unzip wordpress
+     ansible.builtin.unarchive:
+      src: https://wordpress.org/latest.zip
+      dest: /var/www/html
+      remote_src: yes
+   
+   - name: Apache config change
+     replace:
+      path: /etc/apache2/apache2.conf
+      regexp: rajesh
+      replace: "Nikhil"
+
+
+   - name: Copy sample config file
+     command: mv /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php creates=/var/www/html/wordpress/wp-config.php
+     notify:
+      - restart apache  
+
+   - name: Update Database name
+     replace:
+      path: /var/www/html/wordpress/wp-config.php
+      regexp: 'database_name_here'
+      replace: "wpraj"
+
+   - name: Update Database user
+     replace:
+      path: /var/www/html/wordpress/wp-config.php
+      regexp: 'username_here'
+      replace: "wpraj"
+
+   - name: Update database user password
+     replace:
+      path: /var/www/html/wordpress/wp-config.php
+      regexp: 'password_here'
+      replace: "raj@12345"
+
